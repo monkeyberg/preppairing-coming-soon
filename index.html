@@ -318,16 +318,35 @@
   </footer>
 
   <script>
+    const ALLOWED_DOMAINS = new Set([
+      'gmail.com',
+      'yahoo.com', 'yahoo.co.uk', 'yahoo.ca', 'yahoo.com.au',
+      'icloud.com', 'me.com', 'mac.com',
+      'outlook.com', 'hotmail.com', 'hotmail.co.uk', 'live.com', 'msn.com',
+    ]);
+
+    function isAllowedEmail(email) {
+      const domain = email.split('@')[1];
+      return domain && ALLOWED_DOMAINS.has(domain);
+    }
+
     document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const email = document.getElementById('email-input').value.trim();
+      const email = document.getElementById('email-input').value.trim().toLowerCase();
       const btn = document.getElementById('submit-btn');
       const msg = document.getElementById('form-message');
 
-      btn.disabled = true;
-      btn.textContent = 'Sending…';
       msg.textContent = '';
       msg.className = '';
+
+      if (!isAllowedEmail(email)) {
+        msg.textContent = 'Please use a Gmail, Yahoo, iCloud, or Outlook email address.';
+        msg.className = 'error';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
 
       try {
         const res = await fetch('https://findmystudybuddy-production.up.railway.app/api/waitlist', {
@@ -337,7 +356,7 @@
         });
         const data = await res.json();
         if (res.ok && data.ok) {
-          msg.textContent = "You're on the list! We'll be in touch soon.";
+          msg.textContent = "You're on the list! Check your inbox for a confirmation email.";
           msg.className = 'success';
           document.getElementById('email-input').value = '';
         } else {
